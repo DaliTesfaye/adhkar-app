@@ -11,17 +11,25 @@ import {
   Star,
   CalendarClock,
 } from "lucide-react";
-
-
-
+import { fetchPrayerTimes } from "../utils/fetchPrayerTimes";
 
 
 export default function Header() {
   const [time, setTime] = useState(new Date());
+  const [prayerTimes, setPrayerTimes] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetchPrayerTimes()
+      .then(setPrayerTimes)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const gregorianDate = time.toLocaleDateString("ar-EG", {
@@ -31,7 +39,19 @@ export default function Header() {
     day: "numeric",
   });
 
-  const hijriDate = "27 ربيع الأول 1447 هـ"; // لاحقًا API
+  const hijriDate = prayerTimes?.hijriDate || "...";
+
+  // Helper to format time as valid 24h HH:mm only
+  function formatTime(timeStr) {
+    if (!timeStr) return '';
+    // Extract first HH:mm from string
+    const match = timeStr.match(/(\d{1,2}):(\d{2})/);
+    if (!match) return '';
+    let [_, h, m] = match;
+    h = Math.max(0, Math.min(23, parseInt(h, 10))).toString().padStart(2, '0');
+    m = Math.max(0, Math.min(59, parseInt(m, 10))).toString().padStart(2, '0');
+    return `${h}:${m}`;
+  }
 
   return (
     <header className="relative py-12 text-white shadow-xl rounded-b-3xl overflow-hidden">
@@ -84,13 +104,20 @@ export default function Header() {
 
         {/* أوقات الصلاة */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 w-full max-w-6xl mx-auto">
-          {[
-            { name: "الفجر", time: "05:12", icon: <Sunrise className="w-6 h-6 text-blue-300" /> },
-            { name: "الظهر", time: "12:45", icon: <Sun className="w-6 h-6 text-yellow-400" /> },
-            { name: "العصر", time: "16:15", icon: <Sunset className="w-6 h-6 text-orange-400" /> },
-            { name: "المغرب", time: "18:35", icon: <CloudMoon className="w-6 h-6 text-pink-400" /> },
-            { name: "العشاء", time: "20:05", icon: <Star className="w-6 h-6 text-indigo-300" /> },
-            { name: "الجمعة", time: "13:15", icon: <CalendarClock className="w-6 h-6 text-green-300" /> },
+          {loading && (
+            <div className="col-span-6 text-center text-white">جاري جلب أوقات الصلاة ...</div>
+          )}
+          {error && (
+            <div className="col-span-6 text-center text-red-400">{error}</div>
+          )}
+          {prayerTimes && [
+            { name: "الفجر", key: "الفجر", icon: <Sunrise className="w-6 h-6 text-blue-300" /> },
+            { name: "الشروق", key: "الشروق", icon: <Sun className="w-6 h-6 text-yellow-200" /> },
+            { name: "الظهر", key: "الظهر", icon: <Sun className="w-6 h-6 text-yellow-400" /> },
+            { name: "العصر", key: "العصر", icon: <Sunset className="w-6 h-6 text-orange-400" /> },
+            { name: "المغرب", key: "المغرب", icon: <CloudMoon className="w-6 h-6 text-pink-400" /> },
+            { name: "العشاء", key: "العشاء", icon: <Star className="w-6 h-6 text-indigo-300" /> },
+            // { name: "الجمعة", key: "الجمعة", icon: <CalendarClock className="w-6 h-6 text-green-300" /> },
           ].map((prayer, idx) => (
             <div
               key={idx}
@@ -98,7 +125,7 @@ export default function Header() {
             >
               {prayer.icon}
               <h3 className="text-lg font-bold">{prayer.name}</h3>
-              <p className="text-sm">{prayer.time}</p>
+              <p className="text-sm">{formatTime(prayerTimes[prayer.key])}</p>
             </div>
           ))}
         </div>

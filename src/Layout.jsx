@@ -7,7 +7,6 @@ export default function Layout() {
         <div className="min-h-screen bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#0f172a] text-white">
             <Header />
             <Menu />
-
             <main className="container mx-auto px-4 py-8">
                 <Outlet />
             </main>
