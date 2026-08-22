@@ -7,6 +7,7 @@ export default function Menu() {
     { name: "العداد", path: "/counter#counter" },
     { name: "دعاء شامل", path: "/duashamil" },
     { name: "أذكار بعد الصلاة", path: "/azkar-salat" },
+    {name: "القرآن الكريم", path: "/quran" },
   ];
 
   return (
