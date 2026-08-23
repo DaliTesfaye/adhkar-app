@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { fetchPrayerTimes } from "../utils/fetchPrayerTimes";
 
-
 export default function Header() {
   const [time, setTime] = useState(new Date());
   const [prayerTimes, setPrayerTimes] = useState(null);
@@ -54,18 +53,7 @@ export default function Header() {
   }
 
   return (
-    <header className="relative py-12 text-white shadow-xl rounded-b-3xl overflow-hidden">
-      {/* صورة الخلفية */}
-      <div className="absolute inset-0">
-        <img
-          src="https://images.pexels.com/photos/26436656/pexels-photo-26436656.jpeg"
-          alt="Mosque background"
-          className="w-full h-full object-cover"
-        />
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/60"></div>
-      </div>
-
+    <header className="relative py-12 text-white">
       {/* المحتوى */}
       <div className="relative container mx-auto px-6 py-12 flex flex-col gap-10">
         {/* الصف العلوي */}
