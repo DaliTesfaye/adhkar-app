@@ -5,13 +5,20 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function AzkarSalat() {
   const [adhkar, setAdhkar] = useState([]);
   const [index, setIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  // جلب البيانات من json server
+  // جلب أذكار بعد الصلاة من API
   useEffect(() => {
-    fetch("http://localhost:3000/azkarSalat")
+    fetch("https://api.islamic.app/v1/dhikr/after-prayer")
       .then((res) => res.json())
-      .then((data) => setAdhkar(data))
-      .catch((err) => console.log(err));
+      .then((data) => {
+        setAdhkar(data.data.duas);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
   }, []);
 
   // تغيير تلقائي كل 7 ثواني
@@ -25,22 +32,44 @@ export default function AzkarSalat() {
     return () => clearInterval(timer);
   }, [adhkar]);
 
-  const next = () => setIndex((prev) => (prev + 1) % adhkar.length);
-  const prev = () =>
-    setIndex((prev) => (prev - 1 + adhkar.length) % adhkar.length);
+  const next = () => {
+    setIndex((prev) => (prev + 1) % adhkar.length);
+  };
 
-  if (adhkar.length === 0) {
-    return <p className="text-white text-center">جاري تحميل الأذكار...</p>;
+  const prev = () => {
+    setIndex((prev) => (prev - 1 + adhkar.length) % adhkar.length);
+  };
+
+  if (loading) {
+    return (
+      <p className="text-white text-center">
+        جاري تحميل الأذكار...
+      </p>
+    );
   }
 
+  if (adhkar.length === 0) {
+    return (
+      <p className="text-white text-center">
+        لم يتم العثور على الأذكار
+      </p>
+    );
+  }
+
+  const currentDhikr = adhkar[index];
+
   return (
-    <section className="flex flex-col items-center justify-center min-h-[70vh] bg-white/10 backdrop-blur-md rounded-2xl p-6 mx-4 shadow-lg">
+    <section
+      dir="rtl"
+      className="relative flex flex-col items-center justify-center min-h-[70vh] bg-white/10 backdrop-blur-md rounded-2xl p-6 mx-4 shadow-lg"
+    >
       <h2 className="text-2xl md:text-3xl font-bold text-center mb-16 text-white">
         🕌 أذكار بعد الصلاة
       </h2>
 
-      <div className="flex items-center justify-between w-full max-w-2xl">
-        {/* زر السابق */}
+      <div className="flex items-center justify-between w-full max-w-3xl">
+
+        {/* السابق */}
         <button
           onClick={prev}
           className="absolute left-8 p-3 rounded-full bg-white/20 hover:bg-white/30 transition"
@@ -49,7 +78,8 @@ export default function AzkarSalat() {
         </button>
 
         {/* الذكر */}
-        <div className="flex-1 text-center px-6">
+        <div className="flex-1 text-center px-12">
+
           <AnimatePresence mode="wait">
             <motion.div
               key={index}
@@ -57,20 +87,20 @@ export default function AzkarSalat() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.6 }}
-              className="text-xl md:text-2xl font-semibold text-white"
+              className="text-xl md:text-2xl leading-loose font-semibold text-white"
             >
-              {adhkar[index].text}
-              <br />
-              <p className="mt-4 text-md text-white inline-block px-4 py-1 rounded-full">
-                 ({adhkar[index].repeat})
+              {currentDhikr.ar.text}
+
+              {/* رقم الذكر */}
+              <p className="mt-6 text-sm text-white/60">
+                {index + 1} / {adhkar.length}
               </p>
-              <br />
-              <p className="mt-2 text-md text-white/80">{adhkar[index].note}</p>
             </motion.div>
           </AnimatePresence>
+
         </div>
 
-        {/* زر التالي */}
+        {/* التالي */}
         <button
           onClick={next}
           className="absolute right-8 p-3 rounded-full bg-white/20 hover:bg-white/30 transition"
@@ -80,14 +110,17 @@ export default function AzkarSalat() {
       </div>
 
       {/* المؤشرات */}
-      <div className="flex mt-6 space-x-2">
+      <div className="flex mt-8 gap-2">
         {adhkar.map((_, i) => (
-          <span
+          <button
             key={i}
-            className={`w-3 h-3 rounded-full ${
-              i === index ? "bg-white" : "bg-white/40"
+            onClick={() => setIndex(i)}
+            className={`w-3 h-3 rounded-full transition ${
+              i === index
+                ? "bg-white"
+                : "bg-white/40 hover:bg-white/60"
             }`}
-          ></span>
+          />
         ))}
       </div>
     </section>
